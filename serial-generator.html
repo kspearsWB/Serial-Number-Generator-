@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serial Number Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .output {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 150px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .output.error {
+            background: #ffe6e6;
+            border-color: #ff4444;
+            color: #cc0000;
+        }
+        
+        .copy-btn {
+            width: 100%;
+            background: #28a745;
+            margin-top: 10px;
+        }
+        
+        .copy-btn:hover {
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+        
+        .examples {
+            background: #e8eaf6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+        
+        .examples strong {
+            color: #667eea;
+        }
+        
+        .counter-info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔢 Serial Number Generator</h1>
+        <p class="subtitle">Generate sequential serial numbers for your products</p>
+        
+        <div class="input-group">
+            <input 
+                type="text" 
+                id="commandInput" 
+                placeholder="Enter command (e.g., /WBD 7)"
+                autocomplete="off"
+            />
+            <button onclick="generateNumbers()">Generate</button>
+        </div>
+        
+        <div id="output" class="output">Ready to generate serial numbers...</div>
+        
+        <button class="copy-btn" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+        
+        <div class="examples">
+            <strong>Examples:</strong><br>
+            • /WBD 7 → Generates 7 Wallboard serial numbers<br>
+            • /IMG 5 → Generates 5 ImageNet serial numbers<br>
+            • /EXP 3 → Generates 3 Express Pros serial numbers<br>
+            <br>
+            <strong>Product Codes:</strong> WBD, IMG, EXP, BRZ, SGW, MEM
+        </div>
+        
+        <div class="counter-info">
+            ⚠️ Note: Counters reset monthly. Current month: <strong id="currentMonth"></strong>
+        </div>
+    </div>
+
+    <script>
+        // Product codes mapping
+        const productCodes = {
+            'WBD': 'WBD',  // Wallboard
+            'IMG': 'IMG',  // ImageNet
+            'EXP': 'EXP',  // Express Pros
+            'BRZ': 'BRZ',  // Breeze
+            'SGW': 'SGW',  // SignWave
+            'MEM': 'MEM'   // Memphis Communications
+        };
+
+        // Sequential counters for each product (resets monthly)
+        let counters = {
+            'WBD': 1,
+            'IMG': 1,
+            'EXP': 1,
+            'BRZ': 1,
+            'SGW': 1,
+            'MEM': 1
+        };
+
+        // Display current month
+        function updateCurrentMonth() {
+            const now = new Date();
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+            document.getElementById('currentMonth').textContent = 
+                monthNames[now.getMonth()] + ' ' + now.getFullYear();
+        }
+
+        function generateSerialNumber(productCode, count) {
+            // Validate product code
+            if (!productCodes[productCode]) {
+                return { error: true, message: `Error: Invalid product code "${productCode}"` };
+            }
+            
+            // Get current date for MMYY format
+            const now = new Date();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = String(now.getFullYear()).slice(-2);
+            const dateCode = month + year;
+            
+            // Generate serial numbers
+            const serialNumbers = [];
+            const currentCounter = counters[productCode];
+            
+            for (let i = 0; i < count; i++) {
+                const sequential = String(currentCounter + i).padStart(4, '0');
+                const serialNumber = `${productCode}${dateCode}${sequential}`;
+                serialNumbers.push(serialNumber);
+            }
+            
+            // Update counter for next use
+            counters[productCode] += count;
+            
+            return { error: false, message: serialNumbers.join('\n') };
+        }
+
+        function parseCommand(input) {
+            // Match pattern: /CODE number
+            const match = input.trim().match(/^\/([A-Z]{3})\s+(\d+)$/i);
+            
+            if (!match) {
+                return { error: true, message: 'Usage: /WBD 7 or /IMG 5 (product code followed by quantity)' };
+            }
+            
+            const productCode = match[1].toUpperCase();
+            const count = parseInt(match[2], 10);
+            
+            if (count <= 0 || count > 9999) {
+                return { error: true, message: 'Error: Quantity must be between 1 and 9999' };
+            }
+            
+            return generateSerialNumber(productCode, count);
+        }
+
+        function generateNumbers() {
+            const input = document.getElementById('commandInput').value;
+            const output = document.getElementById('output');
+            
+            const result = parseCommand(input);
+            
+            output.textContent = result.message;
+            output.className = result.error ? 'output error' : 'output';
+        }
+
+        function copyToClipboard() {
+            const output = document.getElementById('output');
+            const text = output.textContent;
+            
+            if (text === 'Ready to generate serial numbers...') {
+                alert('Please generate serial numbers first!');
+                return;
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        // Allow Enter key to generate
+        document.getElementById('commandInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateNumbers();
+            }
+        });
+
+        // Initialize
+        updateCurrentMonth();
+    </script>
+</body>
+</html>
