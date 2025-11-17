@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serial Number Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .config-banner {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .config-banner.connected {
+            background: #d4edda;
+            border-color: #28a745;
+        }
+
+        .config-banner.error {
+            background: #f8d7da;
+            border-color: #dc3545;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .generator-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        input {
+            flex: 1;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        button:active:not(:disabled) {
+            transform: translateY(0);
+        }
+        
+        .output {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            min-height: 150px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .output.error {
+            background: #ffe6e6;
+            border-color: #ff4444;
+            color: #cc0000;
+        }
+        
+        .copy-btn {
+            width: 100%;
+            background: #28a745;
+        }
+        
+        .copy-btn:hover {
+            box-shadow: 0 5px 15px rgba(40, 167, 69, 0.4);
+        }
+        
+        .database-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        .database-table {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 2px solid #e0e0e0;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th {
+            background: #667eea;
+            color: white;
+            padding: 12px;
+            text-align: left;
+            font-size: 13px;
+            position: sticky;
+            top: 0;
+        }
+        
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 13px;
+        }
+        
+        tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .examples {
+            background: #e8eaf6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            font-size: 13px;
+        }
+        
+        .examples strong {
+            color: #667eea;
+        }
+        
+        .counter-info {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 12px;
+            color: #856404;
+        }
+        
+        .action-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .export-btn {
+            background: #17a2b8;
+        }
+        
+        .clear-btn {
+            background: #dc3545;
+        }
+        
+        .search-box {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔢 Serial Number Generator with Cloud Database</h1>
+        <p class="subtitle">Universal sequential counter - synced across all users</p>
+        
+        <div id="connectionStatus" class="config-banner">
+            ⚙️ Connecting to database...
+        </div>
+        
+        <div class="main-content">
+            <!-- Generator Section -->
+            <div class="generator-section">
+                <h2 style="margin-bottom: 20px; font-size: 18px;">Generator</h2>
+                
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="commandInput" 
+                        placeholder="Enter command (e.g., /WBD 7 or /WBD 1,2,3,4)"
+                        autocomplete="off"
+                    />
+                    <button onclick="generateNumbers()" id="generateBtn">Generate</button>
+                </div>
+                
+                <div id="output" class="output">Ready to generate serial numbers...</div>
+                
+                <button class="copy-btn" onclick="copyToClipboard()">📋 Copy to Clipboard</button>
+                
+                <div class="examples">
+                    <strong>Examples:</strong><br>
+                    • /WBD 7 → Generates 7 Wallboard serial numbers<br>
+                    • /IMG 5 → Generates 5 ImageNet serial numbers<br>
+                    • /WBD 1,2,3,4,5,6 → Generates 6 Wallboard serial numbers<br>
+                    • /EXP 10,20,30 → Generates 3 Express Pros serial numbers<br>
+                    <br>
+                    <strong>Product Codes:</strong> WBD, IMG, EXP, BRZ, SGW, SWT, MEM, MCC
+                </div>
+                
+                <div class="counter-info">
+                    ⚠️ Universal Counter: <strong id="currentCounter">0001</strong><br>
+                    📅 Current Month: <strong id="currentMonth"></strong>
+                </div>
+            </div>
+            
+            <!-- Database Section -->
+            <div class="database-section">
+                <h2 style="margin-bottom: 20px; font-size: 18px;">Cloud Database</h2>
+                
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalCount">0</div>
+                        <div class="stat-label">Total Generated</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="thisMonthCount">0</div>
+                        <div class="stat-label">This Month</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="nextNumber">0001</div>
+                        <div class="stat-label">Next Sequential</div>
+                    </div>
+                </div>
+                
+                <input 
+                    type="text" 
+                    id="searchBox" 
+                    class="search-box"
+                    placeholder="Search serial numbers..."
+                    onkeyup="searchDatabase()"
+                />
+                
+                <div class="database-table">
+                    <table id="serialTable">
+                        <thead>
+                            <tr>
+                                <th>Serial Number</th>
+                                <th>Product</th>
+                                <th>Sequential</th>
+                                <th>Generated</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <td colspan="4" style="text-align: center; color: #999;">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="export-btn" onclick="exportToCSV()">📥 Export CSV</button>
+                    <button class="clear-btn" onclick="clearDatabase()">🗑️ Clear Database</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // ========================================
+        // CONFIGURATION - REPLACE THESE VALUES
+        // ========================================
+        const SUPABASE_URL = 'https://muuylmyifvcomjflrkta.supabase.co' ;  // e.g., 'https://abcdefgh.supabase.co'
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im11dXlsbXlpZnZjb21qZmxya3RhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk3NTA4NTgsImV4cCI6MjA3NTMyNjg1OH0.E89Ng4HndyPKA93AtRK4jvXV5kL4qPSQeCjpN9AtgNs' ;  // Your anon/public key
+
+        // ========================================
+        // Supabase Client Setup
+        // ========================================
+        const supabase = {
+            url: SUPABASE_URL,
+            key: SUPABASE_KEY,
+            
+            async query(table, options = {}) {
+                let url = `${this.url}/rest/v1/${table}`;
+                
+                if (options.select) url += `?select=${options.select}`;
+                if (options.order) url += `${options.select ? '&' : '?'}order=${options.order}`;
+                if (options.limit) url += `&limit=${options.limit}`;
+                
+                const response = await fetch(url, {
+                    headers: {
+                        'apikey': this.key,
+                        'Authorization': `Bearer ${this.key}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Query failed');
+                return response.json();
+            },
+            
+            async insert(table, data) {
+                const response = await fetch(`${this.url}/rest/v1/${table}`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': this.key,
+                        'Authorization': `Bearer ${this.key}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) throw new Error('Insert failed');
+                return response.json();
+            },
+            
+            async update(table, id, data) {
+                const response = await fetch(`${this.url}/rest/v1/${table}?id=eq.${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': this.key,
+                        'Authorization': `Bearer ${this.key}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(data)
+                });
+                
+                if (!response.ok) throw new Error('Update failed');
+                return response.json();
+            },
+
+            async delete(table) {
+                const response = await fetch(`${this.url}/rest/v1/${table}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'apikey': this.key,
+                        'Authorization': `Bearer ${this.key}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) throw new Error('Delete failed');
+                return true;
+            }
+        };
+
+        // ========================================
+        // Product codes mapping
+        // ========================================
+        const productCodes = {
+            'WBD': 'Wallboard',
+            'IMG': 'ImageNet',
+            'EXP': 'Express Pros',
+            'BRZ': 'Breeze',
+            'SGW': 'SignWave',
+            'SWT': 'SignWave',
+            'MEM': 'Memphis Communications',
+            'MCC': 'Memphis Communications'
+        };
+
+        let universalCounter = 1;
+        let serialDatabase = [];
+        let isConnected = false;
+
+        // ========================================
+        // Initialize and Load Data
+        // ========================================
+        async function initialize() {
+            try {
+                // Check connection
+                if (!SUPABASE_URL.startsWith('https://') || !SUPABASE_KEY.startsWith('eyJ')) {
+                    showStatus('error', '⚠️ Please configure your Supabase credentials in the HTML file');
+                    document.getElementById('generateBtn').disabled = true;
+                    return;
+                }
+
+                // Get current counter
+                const counterData = await supabase.query('counter', { select: 'current_value' });
+                if (counterData && counterData.length > 0) {
+                    universalCounter = counterData[0].current_value;
+                }
+
+                // Load all serial numbers
+                const serialData = await supabase.query('serial_numbers', { 
+                    select: '*',
+                    order: 'timestamp.desc',
+                    limit: 1000
+                });
+                serialDatabase = serialData || [];
+
+                isConnected = true;
+                showStatus('connected', '✅ Connected to cloud database - All users synced!');
+                updateCounterDisplay();
+                updateDatabaseView();
+                updateStats();
+            } catch (error) {
+                console.error('Connection error:', error);
+                showStatus('error', '❌ Failed to connect to database. Check your credentials.');
+                document.getElementById('generateBtn').disabled = true;
+            }
+        }
+
+        function showStatus(type, message) {
+            const banner = document.getElementById('connectionStatus');
+            banner.className = `config-banner ${type}`;
+            banner.textContent = message;
+        }
+
+        // ========================================
+        // Display Functions
+        // ========================================
+        function updateCurrentMonth() {
+            const now = new Date();
+            const monthNames = ["January", "February", "March", "April", "May", "June",
+                "July", "August", "September", "October", "November", "December"];
+            document.getElementById('currentMonth').textContent = 
+                monthNames[now.getMonth()] + ' ' + now.getFullYear();
+        }
+        
+        function updateCounterDisplay() {
+            const counterStr = String(universalCounter).padStart(4, '0');
+            document.getElementById('currentCounter').textContent = counterStr;
+            document.getElementById('nextNumber').textContent = counterStr;
+        }
+
+        function updateDatabaseView(filteredData = null) {
+            const tableBody = document.getElementById('tableBody');
+            const data = filteredData || serialDatabase;
+            
+            if (data.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #999;">No serial numbers generated yet</td></tr>';
+                return;
+            }
+            
+            tableBody.innerHTML = data.map(entry => `
+                <tr>
+                    <td><strong>${entry.serial_number}</strong></td>
+                    <td>${entry.product_name}</td>
+                    <td>${entry.sequential}</td>
+                    <td>${new Date(entry.timestamp).toLocaleString()}</td>
+                </tr>
+            `).join('');
+        }
+        
+        function updateStats() {
+            const now = new Date();
+            const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+            const currentYear = String(now.getFullYear()).slice(-2);
+            const currentDateCode = currentMonth + currentYear;
+            
+            const thisMonthCount = serialDatabase.filter(entry => 
+                entry.date_code === currentDateCode
+            ).length;
+            
+            document.getElementById('totalCount').textContent = serialDatabase.length;
+            document.getElementById('thisMonthCount').textContent = thisMonthCount;
+        }
+
+        // ========================================
+        // Serial Number Generation
+        // ========================================
+        async function generateSerialNumber(productCode, count) {
+            if (!productCodes[productCode]) {
+                return { error: true, message: `Error: Invalid product code "${productCode}"` };
+            }
+            
+            const now = new Date();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const year = String(now.getFullYear()).slice(-2);
+            const dateCode = month + year;
+            
+            const serialNumbers = [];
+            const generatedEntries = [];
+            
+            for (let i = 0; i < count; i++) {
+                const sequential = String(universalCounter).padStart(4, '0');
+                const serialNumber = `${productCode}${dateCode}${sequential}`;
+                serialNumbers.push(serialNumber);
+                
+                generatedEntries.push({
+                    serial_number: serialNumber,
+                    product_code: productCode,
+                    product_name: productCodes[productCode],
+                    sequential: sequential,
+                    date_code: dateCode,
+                    timestamp: new Date().toISOString()
+                });
+                
+                universalCounter++;
+            }
+            
+            try {
+                // Insert all serial numbers
+                await supabase.insert('serial_numbers', generatedEntries);
+                
+                // Update counter
+                await supabase.update('counter', 1, { current_value: universalCounter });
+                
+                // Update local database
+                serialDatabase = [...generatedEntries, ...serialDatabase];
+                
+                updateCounterDisplay();
+                updateDatabaseView();
+                updateStats();
+                
+                return { error: false, message: serialNumbers.join('\n') };
+            } catch (error) {
+                console.error('Generation error:', error);
+                return { error: true, message: 'Error: Failed to save to database. Please try again.' };
+            }
+        }
+
+        function parseCommand(input) {
+            const match = input.trim().match(/^\/([A-Z]{3})\s+(.+)$/i);
+            
+            if (!match) {
+                return { error: true, message: 'Usage: /WBD 7 or /WBD 1,2,3,4,5 (product code followed by quantity or comma-separated numbers)' };
+            }
+            
+            const productCode = match[1].toUpperCase();
+            const numbersInput = match[2].trim();
+            
+            if (numbersInput.includes(',')) {
+                const numbers = numbersInput.split(',').map(n => n.trim()).filter(n => n);
+                const count = numbers.length;
+                
+                if (count === 0) {
+                    return { error: true, message: 'Error: No valid numbers provided' };
+                }
+                
+                if (count > 9999) {
+                    return { error: true, message: 'Error: Cannot generate more than 9999 serial numbers at once' };
+                }
+                
+                return generateSerialNumber(productCode, count);
+            } else {
+                const count = parseInt(numbersInput, 10);
+                
+                if (isNaN(count) || count <= 0 || count > 9999) {
+                    return { error: true, message: 'Error: Quantity must be between 1 and 9999' };
+                }
+                
+                return generateSerialNumber(productCode, count);
+            }
+        }
+
+        window.generateNumbers = async function() {
+            if (!isConnected) {
+                alert('Not connected to database. Please check configuration.');
+                return;
+            }
+
+            const input = document.getElementById('commandInput').value;
+            const output = document.getElementById('output');
+            const btn = document.getElementById('generateBtn');
+            
+            btn.disabled = true;
+            btn.textContent = 'Generating...';
+            
+            const result = await parseCommand(input);
+            
+            output.textContent = result.message;
+            output.className = result.error ? 'output error' : 'output';
+            
+            if (!result.error) {
+                document.getElementById('commandInput').value = '';
+            }
+            
+            btn.disabled = false;
+            btn.textContent = 'Generate';
+        }
+
+        // ========================================
+        // Utility Functions
+        // ========================================
+        window.searchDatabase = function() {
+            const searchTerm = document.getElementById('searchBox').value.toLowerCase();
+            
+            if (!searchTerm) {
+                updateDatabaseView();
+                return;
+            }
+            
+            const filtered = serialDatabase.filter(entry => 
+                entry.serial_number.toLowerCase().includes(searchTerm) ||
+                entry.product_name.toLowerCase().includes(searchTerm) ||
+                entry.sequential.includes(searchTerm)
+            );
+            
+            updateDatabaseView(filtered);
+        }
+        
+        window.exportToCSV = function() {
+            if (serialDatabase.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+            
+            const headers = ['Serial Number', 'Product Code', 'Product Name', 'Sequential', 'Date Code', 'Generated Date'];
+            const rows = serialDatabase.map(entry => [
+                entry.serial_number,
+                entry.product_code,
+                entry.product_name,
+                entry.sequential,
+                entry.date_code,
+                new Date(entry.timestamp).toLocaleString()
+            ]);
+            
+            let csvContent = headers.join(',') + '\n';
+            csvContent += rows.map(row => row.join(',')).join('\n');
+            
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `serial-numbers-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+        
+        window.clearDatabase = async function() {
+            if (!confirm('Are you sure you want to clear ALL serial numbers? This cannot be undone and will affect all users!')) {
+                return;
+            }
+            
+            try {
+                await supabase.delete('serial_numbers');
+                await supabase.update('counter', 1, { current_value: 1 });
+                
+                serialDatabase = [];
+                universalCounter = 1;
+                updateDatabaseView();
+                updateStats();
+                updateCounterDisplay();
+                
+                alert('Database cleared successfully!');
+            } catch (error) {
+                alert('Failed to clear database: ' + error.message);
+            }
+        }
+
+        window.copyToClipboard = function() {
+            const output = document.getElementById('output');
+            const text = output.textContent;
+            
+            if (text === 'Ready to generate serial numbers...') {
+                alert('Please generate serial numbers first!');
+                return;
+            }
+            
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅ Copied!';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                alert('Failed to copy to clipboard');
+            });
+        }
+
+        // Allow Enter key to generate
+        document.getElementById('commandInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                generateNumbers();
+            }
+        });
+
+        // Initialize on page load
+        updateCurrentMonth();
+        initialize();
+    </script>
+</body>
+</html>
